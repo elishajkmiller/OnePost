@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnePost — Cross-Platform Video Poster</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+:root {
+–bg: #0e0808;
+–surface: #1a0f0f;
+–surface2: #241414;
+–border: #3d1f1f;
+–accent: #ff3333;
+–accent2: #ff8080;
+–text: #f5eeee;
+–muted: #997777;
+–danger: #ff5c5c;
+–success: #47ff8a;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘DM Mono’, monospace;
+min-height: 100vh;
+padding: 40px 20px;
+background-image: radial-gradient(ellipse at 20% 20%, rgba(255,51,51,0.06) 0%, transparent 60%),
+radial-gradient(ellipse at 80% 80%, rgba(255,120,80,0.04) 0%, transparent 60%);
+}
+
+header {
+text-align: center;
+margin-bottom: 48px;
+animation: fadeDown 0.6s ease both;
+}
+
+header h1 {
+font-family: ‘Syne’, sans-serif;
+font-size: clamp(2.4rem, 6vw, 4rem);
+font-weight: 800;
+letter-spacing: -2px;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+}
+
+header p {
+color: var(–muted);
+font-size: 0.8rem;
+margin-top: 8px;
+letter-spacing: 2px;
+text-transform: uppercase;
+}
+
+.container {
+max-width: 720px;
+margin: 0 auto;
+display: flex;
+flex-direction: column;
+gap: 24px;
+}
+
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 16px;
+padding: 28px;
+animation: fadeUp 0.5s ease both;
+}
+
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.2s; }
+.card:nth-child(4) { animation-delay: 0.3s; }
+.card:nth-child(5) { animation-delay: 0.4s; }
+
+.card-label {
+font-size: 0.7rem;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(–accent);
+margin-bottom: 16px;
+font-weight: 500;
+}
+
+/* FILE DROP */
+.drop-zone {
+border: 2px dashed var(–border);
+border-radius: 12px;
+padding: 40px 20px;
+text-align: center;
+cursor: pointer;
+transition: all 0.2s;
+position: relative;
+overflow: hidden;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+border-color: var(–accent);
+background: rgba(232,255,71,0.04);
+}
+
+.drop-zone input[type=“file”] {
+position: absolute;
+inset: 0;
+opacity: 0;
+cursor: pointer;
+width: 100%;
+height: 100%;
+}
+
+.drop-icon {
+font-size: 2.5rem;
+margin-bottom: 12px;
+display: block;
+}
+
+.drop-zone p {
+color: var(–muted);
+font-size: 0.82rem;
+}
+
+.drop-zone .file-selected {
+color: var(–accent2);
+font-size: 0.85rem;
+margin-top: 8px;
+display: none;
+}
+
+/* VIDEO PREVIEW */
+#videoPreview {
+width: 100%;
+border-radius: 10px;
+margin-top: 16px;
+display: none;
+max-height: 280px;
+object-fit: contain;
+background: #000;
+}
+
+/* CAPTION */
+textarea {
+width: 100%;
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 10px;
+color: var(–text);
+font-family: ‘DM Mono’, monospace;
+font-size: 0.88rem;
+padding: 14px;
+resize: vertical;
+min-height: 110px;
+line-height: 1.6;
+transition: border-color 0.2s;
+outline: none;
+}
+
+textarea:focus { border-color: var(–accent2); }
+
+.char-count {
+text-align: right;
+font-size: 0.72rem;
+color: var(–muted);
+margin-top: 6px;
+}
+
+/* PLATFORMS */
+.platforms-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+gap: 12px;
+}
+
+.platform-toggle {
+display: flex;
+align-items: center;
+gap: 12px;
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 14px 16px;
+cursor: pointer;
+transition: all 0.2s;
+user-select: none;
+position: relative;
+}
+
+.platform-toggle:hover { border-color: var(–muted); }
+
+.platform-toggle.active {
+border-color: var(–accent);
+background: rgba(232,255,71,0.06);
+}
+
+.platform-toggle.active .platform-name { color: var(–accent); }
+
+.platform-icon {
+font-size: 1.3rem;
+width: 28px;
+text-align: center;
+flex-shrink: 0;
+}
+
+.platform-name {
+font-size: 0.82rem;
+font-weight: 500;
+color: var(–text);
+transition: color 0.2s;
+}
+
+.platform-sub {
+font-size: 0.68rem;
+color: var(–muted);
+margin-top: 2px;
+}
+
+.check-dot {
+width: 8px;
+height: 8px;
+border-radius: 50%;
+background: var(–accent);
+position: absolute;
+top: 10px;
+right: 10px;
+display: none;
+}
+
+.platform-toggle.active .check-dot { display: block; }
+
+/* CREDENTIALS */
+.cred-section { display: none; }
+.cred-section.visible { display: block; }
+
+.cred-group {
+margin-bottom: 20px;
+}
+
+.cred-group:last-child { margin-bottom: 0; }
+
+.cred-header {
+font-size: 0.75rem;
+color: var(–accent2);
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-bottom: 10px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.cred-header::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–border);
+}
+
+.input-row {
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.input-wrap {
+position: relative;
+}
+
+.input-wrap label {
+font-size: 0.7rem;
+color: var(–muted);
+display: block;
+margin-bottom: 4px;
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+
+input[type=“text”], input[type=“password”] {
+width: 100%;
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–text);
+font-family: ‘DM Mono’, monospace;
+font-size: 0.83rem;
+padding: 10px 12px;
+outline: none;
+transition: border-color 0.2s;
+}
+
+input:focus { border-color: var(–accent2); }
+
+.toggle-pw {
+position: absolute;
+right: 10px;
+bottom: 10px;
+background: none;
+border: none;
+color: var(–muted);
+cursor: pointer;
+font-size: 0.75rem;
+letter-spacing: 1px;
+font-family: ‘DM Mono’, monospace;
+}
+
+.hint {
+font-size: 0.72rem;
+color: var(–muted);
+line-height: 1.6;
+background: var(–surface2);
+border-left: 3px solid var(–accent2);
+padding: 10px 12px;
+border-radius: 0 8px 8px 0;
+margin-top: 8px;
+}
+
+.hint a { color: var(–accent2); text-decoration: none; }
+.hint a:hover { text-decoration: underline; }
+
+footer {
+text-align: center;
+margin-top: 48px;
+padding-bottom: 32px;
+font-size: 0.72rem;
+color: var(–muted);
+letter-spacing: 1px;
+animation: fadeUp 0.6s ease 0.6s both;
+}
+
+footer span { color: var(–accent2); }
+
+/* POST BUTTON */
+.post-btn {
+width: 100%;
+background: var(–accent);
+color: #fff;
+border: none;
+border-radius: 12px;
+padding: 18px;
+font-family: ‘Syne’, sans-serif;
+font-size: 1.1rem;
+font-weight: 800;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.2s;
+text-transform: uppercase;
+position: relative;
+overflow: hidden;
+}
+
+.post-btn:hover:not(:disabled) {
+background: #ff5555;
+transform: translateY(-2px);
+box-shadow: 0 8px 32px rgba(255,51,51,0.4);
+}
+
+.post-btn:active:not(:disabled) { transform: translateY(0); }
+.post-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* LOG */
+#log {
+display: none;
+background: #0a0a0b;
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 20px;
+font-size: 0.78rem;
+line-height: 1.9;
+max-height: 260px;
+overflow-y: auto;
+animation: fadeUp 0.3s ease both;
+}
+
+.log-line { display: flex; gap: 10px; align-items: flex-start; }
+.log-time { color: var(–muted); flex-shrink: 0; }
+.log-ok { color: var(–success); }
+.log-err { color: var(–danger); }
+.log-info { color: var(–accent2); }
+.log-pending { color: var(–accent); }
+
+/* ANIMATIONS */
+@keyframes fadeDown {
+from { opacity: 0; transform: translateY(-20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+
+.spinner {
+display: inline-block;
+width: 14px;
+height: 14px;
+border: 2px solid rgba(255,255,255,0.3);
+border-top-color: #fff;
+border-radius: 50%;
+animation: spin 0.7s linear infinite;
+vertical-align: middle;
+margin-right: 8px;
+}
+
+/* SAVE CREDS */
+.save-row {
+display: flex;
+align-items: center;
+gap: 10px;
+margin-top: 16px;
+}
+
+.save-row label {
+font-size: 0.75rem;
+color: var(–muted);
+cursor: pointer;
+}
+
+input[type=“checkbox”] {
+accent-color: var(–accent);
+width: 14px;
+height: 14px;
+cursor: pointer;
+}
+
+.save-btn {
+margin-left: auto;
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–accent2);
+font-family: ‘DM Mono’, monospace;
+font-size: 0.75rem;
+padding: 7px 14px;
+border-radius: 8px;
+cursor: pointer;
+letter-spacing: 1px;
+transition: all 0.2s;
+}
+
+.save-btn:hover { border-color: var(–accent2); background: rgba(71,255,224,0.06); }
+
+.saved-badge {
+font-size: 0.7rem;
+color: var(–success);
+display: none;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <h1>OnePost</h1>
+  <p>One video &mdash; every platform &mdash; one click</p>
+</header>
+
+<div class="container">
+
+  <!-- VIDEO -->
+
+  <div class="card">
+    <div class="card-label">01 — Video File</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="videoFile" accept="video/*">
+      <span class="drop-icon">&#x1F39E;</span>
+      <p>Drop your video here or click to browse</p>
+      <p style="font-size:0.72rem;margin-top:6px;">MP4, MOV, AVI &bull; Max 500MB</p>
+      <div class="file-selected" id="fileSelected"></div>
+    </div>
+    <video id="videoPreview" controls></video>
+  </div>
+
+  <!-- CAPTION -->
+
+  <div class="card">
+    <div class="card-label">02 — Caption</div>
+    <textarea id="caption" placeholder="Write your caption here...&#10;&#10;Tip: Keep it under 300 chars for Bluesky compatibility."></textarea>
+    <div class="char-count"><span id="charCount">0</span> characters</div>
+  </div>
+
+  <!-- PLATFORMS -->
+
+  <div class="card">
+    <div class="card-label">03 — Platforms</div>
+    <div class="platforms-grid">
+      <div class="platform-toggle active" data-platform="bluesky" onclick="togglePlatform(this)">
+        <div class="platform-icon">&#x1F98B;</div>
+        <div>
+          <div class="platform-name">Bluesky</div>
+          <div class="platform-sub">AT Protocol</div>
+        </div>
+        <div class="check-dot"></div>
+      </div>
+      <div class="platform-toggle active" data-platform="facebook" onclick="togglePlatform(this)">
+        <div class="platform-icon">&#x1F4D8;</div>
+        <div>
+          <div class="platform-name">Facebook</div>
+          <div class="platform-sub">+ mirrors to Instagram</div>
+        </div>
+        <div class="check-dot"></div>
+      </div>
+      <div class="platform-toggle" data-platform="mastodon" onclick="togglePlatform(this)">
+        <div class="platform-icon">&#x1F418;</div>
+        <div>
+          <div class="platform-name">Mastodon</div>
+          <div class="platform-sub">Fediverse</div>
+        </div>
+        <div class="check-dot"></div>
+      </div>
+      <div class="platform-toggle" data-platform="youtube" onclick="togglePlatform(this)">
+        <div class="platform-icon">&#x25B6;</div>
+        <div>
+          <div class="platform-name">YouTube</div>
+          <div class="platform-sub">Google OAuth</div>
+        </div>
+        <div class="check-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREDENTIALS -->
+
+  <div class="card" id="credCard">
+    <div class="card-label">04 — Account Credentials</div>
+
+```
+<!-- BLUESKY -->
+<div class="cred-section visible" id="cred-bluesky">
+  <div class="cred-group">
+    <div class="cred-header">Bluesky</div>
+    <div class="input-row">
+      <div class="input-wrap">
+        <label>Handle (e.g. yourname.bsky.social)</label>
+        <input type="text" id="bs-handle" placeholder="yourname.bsky.social">
+      </div>
+      <div class="input-wrap">
+        <label>App Password</label>
+        <input type="password" id="bs-password" placeholder="xxxx-xxxx-xxxx-xxxx">
+        <button class="toggle-pw" onclick="togglePw('bs-password', this)">show</button>
+      </div>
+    </div>
+    <div class="hint">
+      Go to <strong>Bluesky Settings &rarr; App Passwords &rarr; Add App Password</strong>.<br>
+      Use that password here, NOT your main login password.
+    </div>
+  </div>
+</div>
+
+<!-- FACEBOOK -->
+<div class="cred-section visible" id="cred-facebook">
+  <div class="cred-group">
+    <div class="cred-header">Facebook (+ Instagram mirror)</div>
+    <div class="input-row">
+      <div class="input-wrap">
+        <label>Page ID</label>
+        <input type="text" id="fb-page-id" placeholder="Your Facebook Page numeric ID">
+      </div>
+      <div class="input-wrap">
+        <label>Access Token</label>
+        <input type="password" id="fb-token" placeholder="EAAxxxxxx...">
+        <button class="toggle-pw" onclick="togglePw('fb-token', this)">show</button>
+      </div>
+    </div>
+    <div class="hint">
+      You need a <strong>Facebook Developer account</strong> (free).<br>
+      1. Go to <a href="https://developers.facebook.com" target="_blank">developers.facebook.com</a> &rarr; Create App &rarr; Business type<br>
+      2. Add "Pages" product &rarr; generate a Page Access Token<br>
+      3. Make sure your Facebook Page has Instagram linked under <strong>Settings &rarr; Linked Accounts</strong>
+    </div>
+  </div>
+</div>
+
+<!-- MASTODON -->
+<div class="cred-section" id="cred-mastodon">
+  <div class="cred-group">
+    <div class="cred-header">Mastodon</div>
+    <div class="input-row">
+      <div class="input-wrap">
+        <label>Instance URL (e.g. mastodon.social)</label>
+        <input type="text" id="masto-instance" placeholder="mastodon.social">
+      </div>
+      <div class="input-wrap">
+        <label>Access Token</label>
+        <input type="password" id="masto-token" placeholder="your access token">
+        <button class="toggle-pw" onclick="togglePw('masto-token', this)">show</button>
+      </div>
+    </div>
+    <div class="hint">
+      In Mastodon: <strong>Settings &rarr; Development &rarr; New Application</strong><br>
+      Give it read+write permissions, copy the Access Token.
+    </div>
+  </div>
+</div>
+
+<!-- YOUTUBE -->
+<div class="cred-section" id="cred-youtube">
+  <div class="cred-group">
+    <div class="cred-header">YouTube</div>
+    <div class="input-row">
+      <div class="input-wrap">
+        <label>Video Title</label>
+        <input type="text" id="yt-title" placeholder="My awesome video">
+      </div>
+      <div class="input-wrap">
+        <label>Google OAuth Client ID</label>
+        <input type="text" id="yt-client-id" placeholder="xxxxxxxxx.apps.googleusercontent.com">
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
+        <button class="save-btn" style="margin-left:0;" onclick="connectYouTube()">Connect YouTube Account</button>
+        <span id="yt-status" style="font-size:0.75rem;color:var(--muted);">Not connected</span>
+      </div>
+    </div>
+    <div class="hint">
+      1. Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> &rarr; New Project<br>
+      2. <strong>APIs &amp; Services &rarr; Enable APIs</strong> &rarr; search "YouTube Data API v3" &rarr; Enable<br>
+      3. <strong>APIs &amp; Services &rarr; Credentials &rarr; Create Credentials &rarr; OAuth Client ID</strong><br>
+      4. Application type: <strong>Web application</strong><br>
+      5. Under "Authorized JavaScript origins" add: <code style="color:var(--accent2);">null</code> (for local file)<br>
+      6. Copy the Client ID and paste above, then click Connect.<br>
+      <span style="color:var(--accent);">Note: YouTube requires a title — the caption is used as the description.</span>
+    </div>
+  </div>
+</div>
+
+<div class="save-row">
+  <input type="checkbox" id="saveCreds" checked>
+  <label for="saveCreds">Save credentials in browser (localStorage)</label>
+  <button class="save-btn" onclick="saveCredentials()">Save now</button>
+  <span class="saved-badge" id="savedBadge">&#x2713; Saved</span>
+</div>
+```
+
+  </div>
+
+  <!-- POST BUTTON -->
+
+  <div class="card" style="animation-delay:0.5s">
+    <button class="post-btn" id="postBtn" onclick="postAll()">Post to All Selected Platforms</button>
+  </div>
+
+  <!-- LOG -->
+
+  <div id="log"></div>
+
+</div>
+
+<footer>
+  Created by <span>Elisha Miller</span> &mdash; built with <span>Claude</span>
+</footer>
+
+<script>
+  // ── State ──
+  let selectedFile = null;
+  const activePlatforms = new Set(['bluesky', 'facebook']);
+
+  // ── Load saved creds ──
+  window.addEventListener('load', () => {
+    const saved = localStorage.getItem('onepost_creds');
+    if (saved) {
+      try {
+        const c = JSON.parse(saved);
+        if (c.bsHandle) document.getElementById('bs-handle').value = c.bsHandle;
+        if (c.bsPassword) document.getElementById('bs-password').value = c.bsPassword;
+        if (c.fbPageId) document.getElementById('fb-page-id').value = c.fbPageId;
+        if (c.fbToken) document.getElementById('fb-token').value = c.fbToken;
+        if (c.mastoInstance) document.getElementById('masto-instance').value = c.mastoInstance;
+        if (c.mastoToken) document.getElementById('masto-token').value = c.mastoToken;
+        if (c.ytClientId) document.getElementById('yt-client-id').value = c.ytClientId;
+      } catch(e) {}
+    }
+  });
+
+  // ── File drop ──
+  const dropZone = document.getElementById('dropZone');
+  const videoFileInput = document.getElementById('videoFile');
+  const videoPreview = document.getElementById('videoPreview');
+  const fileSelected = document.getElementById('fileSelected');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+  videoFileInput.addEventListener('change', () => {
+    if (videoFileInput.files[0]) setFile(videoFileInput.files[0]);
+  });
+
+  function setFile(file) {
+    selectedFile = file;
+    const url = URL.createObjectURL(file);
+    videoPreview.src = url;
+    videoPreview.style.display = 'block';
+    fileSelected.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
+    fileSelected.style.display = 'block';
+  }
+
+  // ── Caption char count ──
+  document.getElementById('caption').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length;
+  });
+
+  // ── Platform toggle ──
+  function togglePlatform(el) {
+    const p = el.dataset.platform;
+    if (activePlatforms.has(p)) {
+      activePlatforms.delete(p);
+      el.classList.remove('active');
+    } else {
+      activePlatforms.add(p);
+      el.classList.add('active');
+    }
+    updateCredVisibility();
+  }
+
+  function updateCredVisibility() {
+    ['bluesky','facebook','mastodon','youtube'].forEach(p => {
+      const el = document.getElementById('cred-' + p);
+      if (activePlatforms.has(p)) el.classList.add('visible');
+      else el.classList.remove('visible');
+    });
+  }
+
+  // ── Password toggle ──
+  function togglePw(id, btn) {
+    const el = document.getElementById(id);
+    if (el.type === 'password') { el.type = 'text'; btn.textContent = 'hide'; }
+    else { el.type = 'password'; btn.textContent = 'show'; }
+  }
+
+  // ── Save credentials ──
+  function saveCredentials() {
+    const creds = {
+      bsHandle: document.getElementById('bs-handle').value,
+      bsPassword: document.getElementById('bs-password').value,
+      fbPageId: document.getElementById('fb-page-id').value,
+      fbToken: document.getElementById('fb-token').value,
+      mastoInstance: document.getElementById('masto-instance').value,
+      mastoToken: document.getElementById('masto-token').value,
+    };
+    localStorage.setItem('onepost_creds', JSON.stringify(creds));
+    const badge = document.getElementById('savedBadge');
+    badge.style.display = 'inline';
+    setTimeout(() => badge.style.display = 'none', 2000);
+  }
+
+  // ── Logging ──
+  const logEl = document.getElementById('log');
+
+  function log(type, msg) {
+    logEl.style.display = 'block';
+    const time = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `<span class="log-time">${time}</span><span class="log-${type}">${msg}</span>`;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function clearLog() {
+    logEl.innerHTML = '';
+    logEl.style.display = 'none';
+  }
+
+  // ── File to base64 ──
+  function fileToBase64(file) {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── POST TO BLUESKY ──
+  async function postToBluesky(caption, file) {
+    const handle = document.getElementById('bs-handle').value.trim();
+    const password = document.getElementById('bs-password').value.trim();
+    if (!handle || !password) throw new Error('Bluesky handle or app password missing');
+
+    log('pending', '&#x1F98B; Bluesky: authenticating...');
+
+    // Create session
+    const sessionRes = await fetch('https://bsky.social/xrpc/com.atproto.server.createSession', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: handle, password })
+    });
+    if (!sessionRes.ok) {
+      const err = await sessionRes.json();
+      throw new Error('Bluesky auth failed: ' + (err.message || sessionRes.status));
+    }
+    const session = await sessionRes.json();
+    const accessJwt = session.accessJwt;
+    const did = session.did;
+
+    log('info', '&#x1F98B; Bluesky: uploading video...');
+
+    // Upload video blob
+    const videoBytes = await file.arrayBuffer();
+    const uploadRes = await fetch('https://bsky.social/xrpc/com.atproto.repo.uploadBlob', {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type || 'video/mp4',
+        'Authorization': 'Bearer ' + accessJwt
+      },
+      body: videoBytes
+    });
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json();
+      throw new Error('Bluesky video upload failed: ' + (err.message || uploadRes.status));
+    }
+    const { blob } = await uploadRes.json();
+
+    log('info', '&#x1F98B; Bluesky: creating post...');
+
+    // Create post with video embed
+    const postRes = await fetch('https://bsky.social/xrpc/com.atproto.repo.createRecord', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + accessJwt
+      },
+      body: JSON.stringify({
+        repo: did,
+        collection: 'app.bsky.feed.post',
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: caption.slice(0, 300),
+          createdAt: new Date().toISOString(),
+          embed: {
+            $type: 'app.bsky.embed.video',
+            video: blob,
+            alt: caption.slice(0, 100)
+          }
+        }
+      })
+    });
+    if (!postRes.ok) {
+      const err = await postRes.json();
+      throw new Error('Bluesky post failed: ' + (err.message || postRes.status));
+    }
+    log('ok', '&#x1F98B; Bluesky: posted successfully!');
+  }
+
+  // ── POST TO FACEBOOK ──
+  async function postToFacebook(caption, file) {
+    const pageId = document.getElementById('fb-page-id').value.trim();
+    const token = document.getElementById('fb-token').value.trim();
+    if (!pageId || !token) throw new Error('Facebook Page ID or token missing');
+
+    log('pending', '&#x1F4D8; Facebook: uploading video...');
+
+    // Facebook Graph API video upload
+    const formData = new FormData();
+    formData.append('source', file, file.name);
+    formData.append('description', caption);
+    formData.append('access_token', token);
+
+    const res = await fetch(`https://graph-video.facebook.com/v19.0/${pageId}/videos`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error('Facebook upload failed: ' + (err.error?.message || res.status));
+    }
+    log('ok', '&#x1F4D8; Facebook: posted! (Instagram will mirror if linked)');
+  }
+
+  // ── POST TO MASTODON ──
+  async function postToMastodon(caption, file) {
+    let instance = document.getElementById('masto-instance').value.trim();
+    const token = document.getElementById('masto-token').value.trim();
+    if (!instance || !token) throw new Error('Mastodon instance or token missing');
+    if (!instance.startsWith('http')) instance = 'https://' + instance;
+
+    log('pending', '&#x1F418; Mastodon: uploading video...');
+
+    // Upload media
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('description', caption.slice(0, 1500));
+
+    const mediaRes = await fetch(`${instance}/api/v2/media`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData
+    });
+    if (!mediaRes.ok) {
+      const err = await mediaRes.json();
+      throw new Error('Mastodon media upload failed: ' + (err.error || mediaRes.status));
+    }
+    const media = await mediaRes.json();
+    const mediaId = media.id;
+
+    // Wait for processing if async
+    if (mediaRes.status === 202) {
+      log('info', '&#x1F418; Mastodon: waiting for video processing...');
+      await new Promise(r => setTimeout(r, 3000));
+    }
+
+    log('info', '&#x1F418; Mastodon: creating post...');
+
+    const postRes = await fetch(`${instance}/api/v1/statuses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        status: caption.slice(0, 500),
+        media_ids: [mediaId],
+        visibility: 'public'
+      })
+    });
+    if (!postRes.ok) {
+      const err = await postRes.json();
+      throw new Error('Mastodon post failed: ' + (err.error || postRes.status));
+    }
+    log('ok', '&#x1F418; Mastodon: posted successfully!');
+  }
+
+  // ── YOUTUBE OAUTH ──
+  let ytAccessToken = null;
+
+  function connectYouTube() {
+    const clientId = document.getElementById('yt-client-id').value.trim();
+    if (!clientId) { alert('Please enter your Google OAuth Client ID first.'); return; }
+
+    const scope = 'https://www.googleapis.com/auth/youtube.upload';
+    const redirectUri = 'https://oauth2.googleapis.com/token'; // not used for implicit
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${encodeURIComponent(window.location.href.split('?')[0])}` +
+      `&response_type=token` +
+      `&scope=${encodeURIComponent(scope)}` +
+      `&include_granted_scopes=true`;
+
+    const popup = window.open(authUrl, 'ytauth', 'width=500,height=650,scrollbars=yes');
+
+    // Poll for token in URL hash after redirect
+    const poll = setInterval(() => {
+      try {
+        if (popup.closed) { clearInterval(poll); return; }
+        const hash = popup.location.hash;
+        if (hash && hash.includes('access_token')) {
+          clearInterval(poll);
+          popup.close();
+          const params = new URLSearchParams(hash.substring(1));
+          ytAccessToken = params.get('access_token');
+          const statusEl = document.getElementById('yt-status');
+          statusEl.textContent = 'Connected!';
+          statusEl.style.color = 'var(--success)';
+          // Save client ID
+          const saved = JSON.parse(localStorage.getItem('onepost_creds') || '{}');
+          saved.ytClientId = clientId;
+          localStorage.setItem('onepost_creds', JSON.stringify(saved));
+        }
+      } catch(e) { /* cross-origin, still waiting */ }
+    }, 500);
+  }
+
+  // ── POST TO YOUTUBE ──
+  async function postToYouTube(title, description, file) {
+    if (!ytAccessToken) throw new Error('YouTube not connected — click "Connect YouTube Account" first');
+    if (!title) throw new Error('YouTube requires a video title');
+
+    log('pending', '&#x25B6; YouTube: starting upload...');
+
+    const metadata = {
+      snippet: {
+        title: title,
+        description: description,
+        categoryId: '22' // People & Blogs
+      },
+      status: { privacyStatus: 'public' }
+    };
+
+    // Resumable upload
+    const initRes = await fetch(
+      'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + ytAccessToken,
+          'Content-Type': 'application/json',
+          'X-Upload-Content-Type': file.type || 'video/mp4',
+          'X-Upload-Content-Length': file.size
+        },
+        body: JSON.stringify(metadata)
+      }
+    );
+
+    if (!initRes.ok) {
+      const err = await initRes.json();
+      throw new Error('YouTube init failed: ' + (err.error?.message || initRes.status));
+    }
+
+    const uploadUrl = initRes.headers.get('Location');
+    if (!uploadUrl) throw new Error('YouTube did not return an upload URL');
+
+    log('info', '&#x25B6; YouTube: uploading video (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)...');
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type || 'video/mp4',
+        'Content-Length': file.size
+      },
+      body: file
+    });
+
+    if (!uploadRes.ok && uploadRes.status !== 200 && uploadRes.status !== 201) {
+      let errMsg = uploadRes.status;
+      try { const e = await uploadRes.json(); errMsg = e.error?.message || errMsg; } catch(e) {}
+      throw new Error('YouTube upload failed: ' + errMsg);
+    }
+
+    log('ok', '&#x25B6; YouTube: uploaded successfully!');
+  }
+
+  // ── MAIN POST FUNCTION ──
+  async function postAll() {
+    if (!selectedFile) { alert('Please select a video file first.'); return; }
+    if (activePlatforms.size === 0) { alert('Please select at least one platform.'); return; }
+
+    clearLog();
+    const caption = document.getElementById('caption').value;
+    const btn = document.getElementById('postBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Posting...';
+
+    if (document.getElementById('saveCreds').checked) saveCredentials();
+
+    const results = [];
+
+    if (activePlatforms.has('bluesky')) {
+      try { await postToBluesky(caption, selectedFile); results.push('ok'); }
+      catch(e) { log('err', '&#x1F98B; Bluesky error: ' + e.message); results.push('err'); }
+    }
+
+    if (activePlatforms.has('facebook')) {
+      try { await postToFacebook(caption, selectedFile); results.push('ok'); }
+      catch(e) { log('err', '&#x1F4D8; Facebook error: ' + e.message); results.push('err'); }
+    }
+
+    if (activePlatforms.has('mastodon')) {
+      try { await postToMastodon(caption, selectedFile); results.push('ok'); }
+      catch(e) { log('err', '&#x1F418; Mastodon error: ' + e.message); results.push('err'); }
+    }
+
+    if (activePlatforms.has('youtube')) {
+      const ytTitle = document.getElementById('yt-title').value.trim() || selectedFile.name.replace(/\.[^.]+$/, '');
+      try { await postToYouTube(ytTitle, caption, selectedFile); results.push('ok'); }
+      catch(e) { log('err', '&#x25B6; YouTube error: ' + e.message); results.push('err'); }
+    }
+
+    const ok = results.filter(r => r === 'ok').length;
+    const fail = results.filter(r => r === 'err').length;
+
+    if (fail === 0) {
+      log('ok', `All done! Posted to ${ok} platform${ok !== 1 ? 's' : ''}.`);
+      btn.innerHTML = '&#x2713; Done!';
+      btn.style.background = 'var(--success)';
+      setTimeout(() => {
+        btn.innerHTML = 'Post to All Selected Platforms';
+        btn.style.background = '';
+        btn.disabled = false;
+      }, 3000);
+    } else {
+      log('err', `Finished with ${fail} error${fail !== 1 ? 's' : ''}. Check above.`);
+      btn.innerHTML = 'Post to All Selected Platforms';
+      btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>
