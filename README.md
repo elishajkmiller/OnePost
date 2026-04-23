@@ -4,7 +4,7 @@ A free, open-source video cross-posting tool that lets you publish to multiple
 social media platforms with a single click. No subscriptions, no servers, 
 no cloud — just open the file in your browser and post.
 
-**Built by Elisha Miller — made with Claude**
+**Built by Elisha Miller
 
 ## 🔴 Live Demo
 [View it here](https://elishajkmiller.github.io/OnePost)
